@@ -1,34 +1,41 @@
-import axios from 'axios';
-import React, { ReactNode, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { PokemonDetail } from '../pokemon/interfaces/PokemonDetail';
+import { getPokemonsDetails } from '../pokemon/services/getPokemonDetails';
+import { listPokemon, PokemonListInterface } from '../pokemon/services/listPokemon';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import IconButton from '@material-ui/core/IconButton';
+import MenuIcon from '@material-ui/icons/Menu';
+import {Container, Grid } from '@material-ui/core';
+import Card from '@material-ui/core/Card';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import Button from '@material-ui/core/Button';
+
 
 
 interface PokedexProps {
 
 }
 
-interface PokemonListInterface {
-  name: string;
-  url: string;
-}
-
-
 const Pokedex: React.FC<PokedexProps> = () => {
   const [pokemons, setPokemons] = useState<PokemonListInterface[]>([]);
   const [selectedPokemons, setSelectedPokemons] = useState<PokemonListInterface | undefined>(undefined);
-  const [selectedPokemonsDetails, setSelectedPokemonsDetails] = useState<any | undefined>(undefined);
-  
+  const [selectedPokemonsDetails, setSelectedPokemonsDetails] = useState<PokemonDetail | undefined>(undefined);
+
 
   useEffect(() => {
-    axios.get('https://pokeapi.co/api/v2/pokemon')
-      .then((response) => setPokemons(response.data.results))
+    listPokemon()
+      .then((response) => setPokemons(response.results))
   }, []);
 
   useEffect(() => {
 
     if (!selectedPokemons) return
 
-    axios.get(`https://pokeapi.co/api/v2/pokemon/${selectedPokemons.name}`)
-    .then((response) => setSelectedPokemonsDetails(response.data))
+    getPokemonsDetails(selectedPokemons.name)
+      .then((response) => setSelectedPokemonsDetails(response))
     // effect
     // return () => {
     //   cleanup
@@ -37,18 +44,49 @@ const Pokedex: React.FC<PokedexProps> = () => {
 
   return (
     <div>
-      <h1>Pokedex</h1>
 
-      Pokemons:
+      <AppBar position="static">
+        <Toolbar>
+          <IconButton edge="start" color="inherit" aria-label="menu">
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6">
+            Pokedex
+          </Typography>
+        </Toolbar>
+      </AppBar>
 
-      {pokemons.map((pokemon) => <button onClick={() => setSelectedPokemons(pokemon)}>{pokemon.name}</button>)}
+      <Container maxWidth="lg">
+        <div style={{ marginTop: 16 }}>
+          <Grid container spacing={2}>
+            {pokemons.map((pokemon) => (
+              <>
+                <Grid item xs={6} lg={3}>
+                  <Card  variant="outlined">
+                    <CardContent>
+                      <Typography  color="textSecondary" gutterBottom>
+                        {pokemon.name}
+                      </Typography>
+                    </CardContent>
+                    <CardActions>
+                      <Button onClick={() => setSelectedPokemons(pokemon)} size="small">Abrir</Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              </>
+            ))}
+          </Grid>
+          Pokemons:
 
-      <h2>
-        Pokemon Selecionado: <br/>
-        {selectedPokemons?.name || ' Nenhum Pokemon Selecionado'}
-      </h2>
 
-      {JSON.stringify(selectedPokemonsDetails, undefined, 2)}
+          <h2>
+            Pokemon Selecionado: <br />
+            {selectedPokemons?.name || ' Nenhum Pokemon Selecionado'}
+          </h2>
+
+          {JSON.stringify(selectedPokemonsDetails, undefined, 2)}
+        </div>
+      </Container>
     </div>
   );
 };
